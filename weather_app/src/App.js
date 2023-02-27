@@ -10,16 +10,20 @@ function App() {
   const [data, setData] = useState("");
   const [error, setError] = useState();
   const [sendData, setSendData] = useState();
+  const [flag, setFlag] = useState(false);
+  const [history, setHistory] = useState([]);
   let searchHistory = [];
   function onSubmit(e) {
     e.preventDefault();
-    if (searchHistory.length >= 3) {
-      searchHistory.shift();
-      searchHistory.push(data.city);
+    if (history.length >= 5) {
+      history.shift();
+      history.push(data.name);
     } else {
-      searchHistory.push();
+      history.push(data.name);
     }
+    setHistory(history);
     setSendData(city);
+    // console.log(history);
   }
   useEffect(() => {
     fetch(`${api.url}?q=${city}&appid=${api.key}`)
@@ -27,22 +31,25 @@ function App() {
         return response.json();
       })
       .then(function (Data) {
-        console.log(Data);
-        if (Data.cod !== "400") {
+        // console.log(Data);
+        if (Data.cod !== "400" && Data.cod !== "404") {
           setData(Data);
           setError("");
+          setFlag(false);
         } else {
           setError(Data.message);
           setData("");
+          Data.cod !== 404 && setFlag(true);
         }
       })
       .catch(function (error) {
-        console.error(error);
+        console.log(error.message);
       });
   }, [sendData]);
 
   return (
     <div className="App">
+      <h2>Weather App</h2>
       <form>
         <input
           value={city}
@@ -68,9 +75,10 @@ function App() {
         ""
       )}
       {error && <p className="Error_container">{error}</p>}
-      {!error && !data ? (
+      {flag ? (
         <div>
-          {searchHistory.map((elm, indx) => {
+          <h3>Search history--(Last-3)</h3>
+          {history.map((elm, indx) => {
             return <p key={indx}>{elm}</p>;
           })}
         </div>
@@ -80,11 +88,5 @@ function App() {
     </div>
   );
 }
-// city: "",
-// currentTemp: "",
-// tempRange: "",
-// humidity: "",
-// seaLevel: "",
-// ground_level: "",
-// 865c14e0ee5a0aff44262656802ef31b
+
 export default App;
